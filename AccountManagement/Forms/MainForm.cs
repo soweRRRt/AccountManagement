@@ -21,6 +21,7 @@ public partial class MainForm : Form
     private Panel sidebarPanel;
     private Button allButton;
     private Button favoritesButton;
+    private Button manageCategoriesButton;
     private Label categoriesLabel;
     private FlowLayoutPanel categoryPanel;
 
@@ -97,10 +98,18 @@ public partial class MainForm : Form
         favoritesButton = CreateSidebarButton("⭐ Избранное", 65);
         favoritesButton.Click += (s, e) => FilterAccounts("Favorites");
 
+        manageCategoriesButton = CreateSidebarButton("⚙️ Управление", 115);
+        manageCategoriesButton.Click += (s, e) =>
+        {
+            var form = new CategoriesListForm();
+            form.ShowDialog();
+            LoadCategories();
+        };
+
         categoriesLabel = new Label
         {
             Text = "КАТЕГОРИИ",
-            Location = new Point(15, 130),
+            Location = new Point(15, 175),
             AutoSize = true,
             Font = new Font("Segoe UI", 9, FontStyle.Bold),
             ForeColor = Color.FromArgb(150, 150, 150)
@@ -108,7 +117,7 @@ public partial class MainForm : Form
 
         categoryPanel = new FlowLayoutPanel
         {
-            Location = new Point(15, 155),
+            Location = new Point(15, 200),
             Size = new Size(190, 400),
             AutoScroll = true,
             FlowDirection = FlowDirection.TopDown,
@@ -117,10 +126,11 @@ public partial class MainForm : Form
 
         sidebarPanel.Controls.AddRange(new Control[]
         {
-                allButton,
-                favoritesButton,
-                categoriesLabel,
-                categoryPanel
+            allButton,
+            favoritesButton,
+            manageCategoriesButton,
+            categoriesLabel,
+            categoryPanel
         });
 
         accountsFlowPanel = new FlowLayoutPanel
@@ -134,7 +144,7 @@ public partial class MainForm : Form
         detailsPanel = new Panel
         {
             Dock = DockStyle.Right,
-            Width = 400,
+            Width = 500,
             BackColor = Color.White,
             Visible = false,
             Padding = new Padding(20)

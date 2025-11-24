@@ -26,6 +26,8 @@ public class DatabaseService
         _connectionString = $"Filename={_dbPath};Password=SecureDBPassword123";
     }
 
+    // === РАБОТА С АККАУНТАМИ ===
+
     public List<Account> GetAllAccounts()
     {
         using (var db = new LiteDatabase(_connectionString))
@@ -124,5 +126,86 @@ public class DatabaseService
     public string GetDatabasePath()
     {
         return _dbPath;
+    }
+
+    // === РАБОТА С КАТЕГОРИЯМИ ===
+
+    public List<Category> GetAllCategoriesWithIcons()
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+            return categories.FindAll().OrderBy(c => c.Name).ToList();
+        }
+    }
+
+    public Category GetCategoryByName(string name)
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+            return categories.FindOne(c => c.Name == name);
+        }
+    }
+
+    public int AddCategory(Category category)
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+
+            // Проверка на дубликат
+            var exists = categories.FindOne(c => c.Name == category.Name);
+            if (exists != null)
+            {
+                throw new Exception("Категория с таким именем уже существует");
+            }
+
+            return categories.Insert(category);
+        }
+    }
+
+    public bool UpdateCategory(Category category)
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+            return categories.Update(category);
+        }
+    }
+
+    public bool DeleteCategory(int id)
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+            var category = categories.FindById(id);
+
+            if (category != null)
+            {
+                // Удаляем категорию у всех аккаунтов
+                var accounts = db.GetCollection<Account>("accounts");
+                var accountsWithCategory = accounts.Find(a => a.Category == category.Name);
+
+                foreach (var account in accountsWithCategory)
+                {
+                    account.Category = null;
+                    accounts.Update(account);
+                }
+
+                return categories.Delete(id);
+            }
+
+            return false;
+        }
+    }
+
+    public Category GetCategoryById(int id)
+    {
+        using (var db = new LiteDatabase(_connectionString))
+        {
+            var categories = db.GetCollection<Category>("categories");
+            return categories.FindById(id);
+        }
     }
 }
