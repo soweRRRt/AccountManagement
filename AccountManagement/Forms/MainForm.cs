@@ -4,6 +4,7 @@ using AccountManagement.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace AccountManagement.Forms;
@@ -32,6 +33,7 @@ public partial class MainForm : Form
     {
         _dbService = new DatabaseService();
         InitializeComponent();
+        LoadCategories();
         LoadAccounts();
     }
 
@@ -102,8 +104,11 @@ public partial class MainForm : Form
         manageCategoriesButton.Click += (s, e) =>
         {
             var form = new CategoriesListForm();
-            form.ShowDialog();
-            LoadCategories();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                LoadCategories();
+                LoadAccounts();
+            }
         };
 
         categoriesLabel = new Label
@@ -121,7 +126,8 @@ public partial class MainForm : Form
             Size = new Size(190, 400),
             AutoScroll = true,
             FlowDirection = FlowDirection.TopDown,
-            WrapContents = false
+            WrapContents = false,
+            BackColor = Color.White
         };
 
         sidebarPanel.Controls.AddRange(new Control[]
@@ -154,8 +160,6 @@ public partial class MainForm : Form
         this.Controls.Add(detailsPanel);
         this.Controls.Add(sidebarPanel);
         this.Controls.Add(topPanel);
-
-        LoadCategories();
     }
 
     private Button CreateSidebarButton(string text, int y)
@@ -180,28 +184,57 @@ public partial class MainForm : Form
 
     private void LoadCategories()
     {
-        categoryPanel.Controls.Clear();
-        var categories = _dbService.GetAllCategories();
-
-        foreach (var category in categories)
+        try
         {
-            var categoryButton = new Button
-            {
-                Text = $"  {category}",
-                Size = new Size(190, 35),
-                TextAlign = ContentAlignment.MiddleLeft,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.Transparent,
-                ForeColor = Color.FromArgb(80, 80, 80),
-                Font = new Font("Segoe UI", 9),
-                Cursor = Cursors.Hand,
-                Tag = category
-            };
-            categoryButton.FlatAppearance.BorderSize = 0;
-            categoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(240, 240, 250);
-            categoryButton.Click += (s, e) => FilterAccounts("Category", category);
+            categoryPanel.Controls.Clear();
+            var categories = _dbService.GetAllCategories();
 
-            categoryPanel.Controls.Add(categoryButton);
+            System.Diagnostics.Debug.WriteLine($"Loaded {categories?.Count ?? 0} categories");
+
+            if (categories == null || categories.Count == 0)
+            {
+                Label noCategoriesLabel = new Label
+                {
+                    Text = "Нет категорий",
+                    Location = new Point(5, 5),
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 9),
+                    ForeColor = Color.FromArgb(150, 150, 150)
+                };
+                categoryPanel.Controls.Add(noCategoriesLabel);
+                return;
+            }
+
+            foreach (var category in categories)
+            {
+                var categoryButton = new Button
+                {
+                    Text = $"  📂 {category}",
+                    Size = new Size(190, 35),
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = Color.Transparent,
+                    ForeColor = Color.FromArgb(80, 80, 80),
+                    Font = new Font("Segoe UI", 9),
+                    Cursor = Cursors.Hand,
+                    Tag = category,
+                    Margin = new Padding(0, 0, 0, 2)
+                };
+                categoryButton.FlatAppearance.BorderSize = 0;
+                categoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(240, 240, 250);
+
+                string cat = category; // Capture variable
+                categoryButton.Click += (s, e) => FilterAccounts("Category", cat);
+
+                categoryPanel.Controls.Add(categoryButton);
+            }
+
+            categoryPanel.Refresh();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка загрузки категорий: {ex.Message}", "Ошибка",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -281,8 +314,8 @@ public partial class MainForm : Form
         var addEditForm = new AddEditAccountForm();
         if (addEditForm.ShowDialog() == DialogResult.OK)
         {
-            LoadAccounts();
             LoadCategories();
+            LoadAccounts();
         }
     }
 
@@ -294,14 +327,14 @@ public partial class MainForm : Form
         var detailsForm = new AccountDetailsControl(account, _dbService);
         detailsForm.OnAccountUpdated += () =>
         {
-            LoadAccounts();
             LoadCategories();
+            LoadAccounts();
         };
         detailsForm.OnAccountDeleted += () =>
         {
             detailsPanel.Visible = false;
-            LoadAccounts();
             LoadCategories();
+            LoadAccounts();
         };
         detailsForm.OnClose += () =>
         {

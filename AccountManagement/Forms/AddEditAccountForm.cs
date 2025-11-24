@@ -29,9 +29,11 @@ public partial class AddEditAccountForm : Form
     private Button selectIconButton;
     private Button removeIconButton;
     private string _selectedIconPath;
+    private bool _iconPaintHandlerAttached = false;
 
     private Button saveButton;
     private Button cancelButton;
+    private Label passwordStrengthLabel;
 
     public AddEditAccountForm(Account account = null)
     {
@@ -50,7 +52,7 @@ public partial class AddEditAccountForm : Form
     private void InitializeComponent()
     {
         this.Text = _isEditMode ? "Редактировать аккаунт" : "Добавить аккаунт";
-        this.Size = new Size(500, 800);
+        this.Size = new Size(520, 820);
         this.StartPosition = FormStartPosition.CenterParent;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
@@ -61,32 +63,48 @@ public partial class AddEditAccountForm : Form
 
         int yPos = 20;
         int leftMargin = 30;
-        int controlWidth = 420;
+        int controlWidth = 440;
+
+        // Заголовок формы
+        Label formTitle = new Label
+        {
+            Text = _isEditMode ? "Редактирование аккаунта" : "Новый аккаунт",
+            Location = new Point(leftMargin, yPos),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            ForeColor = Color.FromArgb(33, 33, 33)
+        };
+        this.Controls.Add(formTitle);
+        yPos += 40;
 
         AddLabel("Название *", leftMargin, yPos);
         yPos += 25;
         titleTextBox = AddTextBox(leftMargin, yPos, controlWidth);
+        titleTextBox.MaxLength = 100;
         yPos += 45;
 
         AddLabel("Логин *", leftMargin, yPos);
         yPos += 25;
         usernameTextBox = AddTextBox(leftMargin, yPos, controlWidth);
+        usernameTextBox.MaxLength = 100;
         yPos += 45;
 
         AddLabel("Пароль *", leftMargin, yPos);
         yPos += 25;
 
-        passwordTextBox = AddTextBox(leftMargin, yPos, 310);
+        passwordTextBox = AddTextBox(leftMargin, yPos, 330);
         passwordTextBox.UseSystemPasswordChar = true;
+        passwordTextBox.MaxLength = 200;
 
         showPasswordButton = new Button
         {
             Text = "👁",
-            Location = new Point(leftMargin + 315, yPos),
-            Size = new Size(35, 30),
+            Location = new Point(leftMargin + 335, yPos),
+            Size = new Size(35, 32),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(240, 240, 245),
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            TabStop = false
         };
         showPasswordButton.FlatAppearance.BorderSize = 0;
         showPasswordButton.Click += ShowPasswordButton_Click;
@@ -94,52 +112,39 @@ public partial class AddEditAccountForm : Form
         generatePasswordButton = new Button
         {
             Text = "🎲",
-            Location = new Point(leftMargin + 355, yPos),
-            Size = new Size(35, 30),
+            Location = new Point(leftMargin + 375, yPos),
+            Size = new Size(35, 32),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(240, 240, 245),
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            TabStop = false
         };
         generatePasswordButton.FlatAppearance.BorderSize = 0;
         generatePasswordButton.Click += GeneratePasswordButton_Click;
 
-        Label passwordStrengthLabel = new Label
+        passwordStrengthLabel = new Label
         {
-            Location = new Point(leftMargin + 395, yPos + 5),
+            Location = new Point(leftMargin + 415, yPos + 7),
             AutoSize = true,
-            Font = new Font("Segoe UI", 8),
-            ForeColor = Color.FromArgb(150, 150, 150)
+            Font = new Font("Segoe UI", 12),
+            ForeColor = Color.FromArgb(150, 150, 150),
+            Text = ""
         };
 
-        passwordTextBox.TextChanged += (s, e) =>
-        {
-            int strength = CalculatePasswordStrength(passwordTextBox.Text);
-            passwordStrengthLabel.Text = strength switch
-            {
-                >= 80 => "💪",
-                >= 60 => "👍",
-                >= 40 => "⚠️",
-                _ => "❌"
-            };
-            passwordStrengthLabel.ForeColor = strength switch
-            {
-                >= 80 => Color.Green,
-                >= 60 => Color.Orange,
-                >= 40 => Color.OrangeRed,
-                _ => Color.Red
-            };
-        };
+        passwordTextBox.TextChanged += PasswordTextBox_TextChanged;
 
         yPos += 45;
 
         AddLabel("Email", leftMargin, yPos);
         yPos += 25;
         emailTextBox = AddTextBox(leftMargin, yPos, controlWidth);
+        emailTextBox.MaxLength = 100;
         yPos += 45;
 
         AddLabel("Веб-сайт", leftMargin, yPos);
         yPos += 25;
         websiteTextBox = AddTextBox(leftMargin, yPos, controlWidth);
+        websiteTextBox.MaxLength = 200;
         yPos += 45;
 
         AddLabel("Категория", leftMargin, yPos);
@@ -148,12 +153,13 @@ public partial class AddEditAccountForm : Form
         categoryComboBox = new ComboBox
         {
             Location = new Point(leftMargin, yPos),
-            Size = new Size(controlWidth, 30),
+            Size = new Size(controlWidth, 32),
             Font = new Font("Segoe UI", 10),
             DropDownStyle = ComboBoxStyle.DropDown
         };
+        categoryComboBox.MaxLength = 50;
 
-        LoadCategoriesIntoComboBox();
+        this.Load += (s, e) => LoadCategoriesIntoComboBox();
 
         yPos += 45;
 
@@ -167,7 +173,8 @@ public partial class AddEditAccountForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
             Font = new Font("Segoe UI", 10),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            MaxLength = 1000
         };
 
         yPos += 85;
@@ -187,14 +194,14 @@ public partial class AddEditAccountForm : Form
             Size = new Size(60, 60),
             BorderStyle = BorderStyle.FixedSingle,
             SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.FromArgb(240, 240, 245)
+            BackColor = Color.FromArgb(250, 250, 250)
         };
 
         selectIconButton = new Button
         {
             Text = "Выбрать",
             Location = new Point(70, 5),
-            Size = new Size(100, 25),
+            Size = new Size(100, 30),
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -207,8 +214,8 @@ public partial class AddEditAccountForm : Form
         removeIconButton = new Button
         {
             Text = "Удалить",
-            Location = new Point(70, 35),
-            Size = new Size(100, 25),
+            Location = new Point(180, 5),
+            Size = new Size(100, 30),
             BackColor = Color.FromArgb(220, 220, 220),
             ForeColor = Color.FromArgb(80, 80, 80),
             FlatStyle = FlatStyle.Flat,
@@ -231,13 +238,13 @@ public partial class AddEditAccountForm : Form
             Font = new Font("Segoe UI", 10)
         };
 
-        yPos += 40;
+        yPos += 50;
 
         saveButton = new Button
         {
-            Text = _isEditMode ? "Сохранить" : "Добавить",
+            Text = _isEditMode ? "💾 Сохранить" : "➕ Добавить",
             Location = new Point(leftMargin, yPos),
-            Size = new Size(200, 45),
+            Size = new Size(210, 50),
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -249,9 +256,9 @@ public partial class AddEditAccountForm : Form
 
         cancelButton = new Button
         {
-            Text = "Отмена",
-            Location = new Point(leftMargin + 220, yPos),
-            Size = new Size(200, 45),
+            Text = "❌ Отмена",
+            Location = new Point(leftMargin + 230, yPos),
+            Size = new Size(210, 50),
             BackColor = Color.FromArgb(220, 220, 220),
             ForeColor = Color.FromArgb(80, 80, 80),
             FlatStyle = FlatStyle.Flat,
@@ -268,15 +275,49 @@ public partial class AddEditAccountForm : Form
             websiteTextBox, categoryComboBox, notesTextBox, favoriteCheckBox,
             saveButton, cancelButton
         });
+
+        // Set Tab Order
+        titleTextBox.TabIndex = 0;
+        usernameTextBox.TabIndex = 1;
+        passwordTextBox.TabIndex = 2;
+        emailTextBox.TabIndex = 3;
+        websiteTextBox.TabIndex = 4;
+        categoryComboBox.TabIndex = 5;
+        notesTextBox.TabIndex = 6;
+        favoriteCheckBox.TabIndex = 7;
+        saveButton.TabIndex = 8;
+        cancelButton.TabIndex = 9;
     }
 
     private void LoadCategoriesIntoComboBox()
     {
-        categoryComboBox.Items.Clear();
+        try
+        {
+            categoryComboBox.Items.Clear();
+            var categories = _dbService.GetAllCategories();
 
-        // Загружаем категории из базы данных
-        var categories = _dbService.GetAllCategories();
-        categoryComboBox.Items.AddRange(categories.ToArray());
+            System.Diagnostics.Debug.WriteLine($"LoadCategoriesIntoComboBox: {categories?.Count ?? 0} categories");
+
+            if (categories != null && categories.Count > 0)
+            {
+                foreach (var category in categories)
+                {
+                    categoryComboBox.Items.Add(category);
+                }
+            }
+
+            // Если режим редактирования и категория задана, устанавливаем её
+            if (_isEditMode && !string.IsNullOrWhiteSpace(_account?.Category))
+            {
+                categoryComboBox.Text = _account.Category;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadCategoriesIntoComboBox Error: {ex.Message}");
+            MessageBox.Show($"Ошибка загрузки категорий: {ex.Message}", "Ошибка",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private Label AddLabel(string text, int x, int y)
@@ -298,7 +339,7 @@ public partial class AddEditAccountForm : Form
         var textBox = new TextBox
         {
             Location = new Point(x, y),
-            Size = new Size(width, 30),
+            Size = new Size(width, 32),
             Font = new Font("Segoe UI", 10),
             BorderStyle = BorderStyle.FixedSingle
         };
@@ -307,19 +348,73 @@ public partial class AddEditAccountForm : Form
 
     private void LoadAccountData()
     {
-        titleTextBox.Text = _account.Title;
-        usernameTextBox.Text = _account.Username;
-        passwordTextBox.Text = EncryptionService.Decrypt(_account.PasswordHash);
-        emailTextBox.Text = _account.Email;
-        websiteTextBox.Text = _account.Website;
-        categoryComboBox.Text = _account.Category;
-        notesTextBox.Text = _account.Notes;
+        if (_account == null) return;
+
+        titleTextBox.Text = _account.Title ?? "";
+        usernameTextBox.Text = _account.Username ?? "";
+
+        try
+        {
+            passwordTextBox.Text = EncryptionService.Decrypt(_account.PasswordHash ?? "");
+        }
+        catch
+        {
+            passwordTextBox.Text = "";
+        }
+
+        emailTextBox.Text = _account.Email ?? "";
+        websiteTextBox.Text = _account.Website ?? "";
+        categoryComboBox.Text = _account.Category ?? "";
+        notesTextBox.Text = _account.Notes ?? "";
         favoriteCheckBox.Checked = _account.IsFavorite;
 
         _selectedIconPath = _account.IconPath;
-        if (!string.IsNullOrEmpty(_account.IconPath) && File.Exists(_account.IconPath))
+        if (!string.IsNullOrWhiteSpace(_account.IconPath) && File.Exists(_account.IconPath))
         {
-            iconPictureBox.Image = Image.FromFile(_account.IconPath);
+            try
+            {
+                iconPictureBox.Image = Image.FromFile(_account.IconPath);
+            }
+            catch
+            {
+                LoadDefaultIconPreview();
+            }
+        }
+        else
+        {
+            LoadDefaultIconPreview();
+        }
+    }
+
+    private void LoadDefaultIconPreview()
+    {
+        if (!_iconPaintHandlerAttached)
+        {
+            iconPictureBox.Paint += IconPictureBox_Paint;
+            _iconPaintHandlerAttached = true;
+        }
+        iconPictureBox.Invalidate();
+    }
+
+    private void IconPictureBox_Paint(object sender, PaintEventArgs e)
+    {
+        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+        using (var brush = new SolidBrush(Color.FromArgb(100, 100, 255)))
+        {
+            e.Graphics.FillEllipse(brush, 5, 5, 50, 50);
+        }
+
+        string initial = (!string.IsNullOrWhiteSpace(titleTextBox.Text) ? titleTextBox.Text[0].ToString().ToUpper() : "?");
+        using (var font = new Font("Segoe UI", 18, FontStyle.Bold))
+        using (var brush = new SolidBrush(Color.White))
+        {
+            var sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            e.Graphics.DrawString(initial, font, brush, new RectangleF(5, 5, 50, 50), sf);
         }
     }
 
@@ -337,11 +432,33 @@ public partial class AddEditAccountForm : Form
         showPasswordButton.Text = "🙈";
 
         MessageBox.Show(
-            "Новый пароль сгенерирован!\n\nНе забудьте сохранить его.",
+            $"Новый пароль сгенерирован!\n\n{generatedPassword}\n\nНе забудьте сохранить его.",
             "Генерация пароля",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information
         );
+    }
+
+    private void PasswordTextBox_TextChanged(object sender, EventArgs e)
+    {
+        int strength = CalculatePasswordStrength(passwordTextBox.Text);
+
+        passwordStrengthLabel.Text = strength switch
+        {
+            >= 80 => "💪",
+            >= 60 => "👍",
+            >= 40 => "⚠️",
+            >= 1 => "❌",
+            _ => ""
+        };
+
+        passwordStrengthLabel.ForeColor = strength switch
+        {
+            >= 80 => Color.Green,
+            >= 60 => Color.Orange,
+            >= 40 => Color.OrangeRed,
+            _ => Color.Red
+        };
     }
 
     private void SelectIconButton_Click(object sender, EventArgs e)
@@ -370,6 +487,13 @@ public partial class AddEditAccountForm : Form
                     File.Copy(openFileDialog.FileName, newPath, true);
 
                     _selectedIconPath = newPath;
+
+                    if (_iconPaintHandlerAttached)
+                    {
+                        iconPictureBox.Paint -= IconPictureBox_Paint;
+                        _iconPaintHandlerAttached = false;
+                    }
+
                     iconPictureBox.Image = Image.FromFile(newPath);
                 }
                 catch (Exception ex)
@@ -385,6 +509,7 @@ public partial class AddEditAccountForm : Form
     {
         _selectedIconPath = null;
         iconPictureBox.Image = null;
+        LoadDefaultIconPreview();
     }
 
     private int CalculatePasswordStrength(string password)
@@ -408,25 +533,57 @@ public partial class AddEditAccountForm : Form
 
     private void SaveButton_Click(object sender, EventArgs e)
     {
+        // Валидация
         if (string.IsNullOrWhiteSpace(titleTextBox.Text))
         {
-            MessageBox.Show("Введите название аккаунта", "Ошибка",
+            MessageBox.Show("Введите название аккаунта", "Ошибка валидации",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            titleTextBox.Focus();
             return;
         }
 
         if (string.IsNullOrWhiteSpace(usernameTextBox.Text))
         {
-            MessageBox.Show("Введите логин", "Ошибка",
+            MessageBox.Show("Введите логин", "Ошибка валидации",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            usernameTextBox.Focus();
             return;
         }
 
         if (string.IsNullOrWhiteSpace(passwordTextBox.Text))
         {
-            MessageBox.Show("Введите пароль", "Ошибка",
+            MessageBox.Show("Введите пароль", "Ошибка валидации",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            passwordTextBox.Focus();
             return;
+        }
+
+        if (passwordTextBox.Text.Length < 4)
+        {
+            MessageBox.Show("Пароль должен содержать минимум 4 символа", "Ошибка валидации",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            passwordTextBox.Focus();
+            return;
+        }
+
+        // Email validation (optional)
+        if (!string.IsNullOrWhiteSpace(emailTextBox.Text))
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(emailTextBox.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                var result = MessageBox.Show(
+                    "Email имеет неправильный формат. Продолжить?",
+                    "Предупреждение",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (result == DialogResult.No)
+                {
+                    emailTextBox.Focus();
+                    return;
+                }
+            }
         }
 
         try
@@ -444,6 +601,8 @@ public partial class AddEditAccountForm : Form
                 _account.IconPath = _selectedIconPath;
 
                 _dbService.UpdateAccount(_account);
+                MessageBox.Show("Аккаунт успешно обновлен!", "Успех",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
@@ -461,6 +620,8 @@ public partial class AddEditAccountForm : Form
                 };
 
                 _dbService.AddAccount(newAccount);
+                MessageBox.Show("Аккаунт успешно добавлен!", "Успех",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
             this.DialogResult = DialogResult.OK;
@@ -471,5 +632,11 @@ public partial class AddEditAccountForm : Form
             MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        titleTextBox.Focus();
     }
 }
