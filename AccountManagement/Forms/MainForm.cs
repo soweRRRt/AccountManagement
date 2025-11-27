@@ -40,7 +40,8 @@ public partial class MainForm : Form
     private void InitializeComponent()
     {
         this.Text = "Password Manager";
-        this.Size = new Size(1200, 700);
+        this.Size = new Size(1600, 800);
+        this.MinimumSize = new Size(1400, 700);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.BackColor = Color.FromArgb(245, 245, 250);
         this.Font = new Font("Segoe UI", 9);
@@ -64,7 +65,7 @@ public partial class MainForm : Form
 
         searchBox = new TextBox
         {
-            Size = new Size(300, 35),
+            Size = new Size(350, 35),
             Location = new Point(300, 20),
             Font = new Font("Segoe UI", 11)
         };
@@ -74,12 +75,13 @@ public partial class MainForm : Form
         {
             Text = "+ Добавить",
             Size = new Size(140, 40),
-            Location = new Point(1020, 15),
+            Location = new Point(1420, 15),
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
         addButton.FlatAppearance.BorderSize = 0;
         addButton.Click += AddButton_Click;
@@ -115,7 +117,7 @@ public partial class MainForm : Form
         categoryPanel = new FlowLayoutPanel
         {
             Location = new Point(15, 200),
-            Size = new Size(190, 400),
+            Size = new Size(190, 500),
             AutoScroll = true,
             FlowDirection = FlowDirection.TopDown,
             WrapContents = false,
@@ -139,14 +141,14 @@ public partial class MainForm : Form
             BackColor = Color.FromArgb(245, 245, 250)
         };
 
-        // УВЕЛИЧЕНА ШИРИНА С 500 до 600
         detailsPanel = new Panel
         {
             Dock = DockStyle.Right,
-            Width = 600,
+            Width = 650,
             BackColor = Color.White,
             Visible = false,
-            Padding = new Padding(20)
+            Padding = new Padding(20),
+            AutoScroll = false
         };
 
         this.Controls.Add(accountsFlowPanel);
@@ -180,7 +182,6 @@ public partial class MainForm : Form
         var form = new CategoriesListForm();
         form.FormClosed += (s, args) =>
         {
-            // Обновляем категории после закрытия формы управления
             LoadCategories();
             LoadAccounts();
         };
@@ -192,11 +193,10 @@ public partial class MainForm : Form
         try
         {
             categoryPanel.Controls.Clear();
-            var categories = _dbService.GetAllCategories();
 
-            System.Diagnostics.Debug.WriteLine($"Loaded {categories?.Count ?? 0} categories");
+            var categoriesWithAccounts = _dbService.GetCategoriesWithAccounts();
 
-            if (categories == null || categories.Count == 0)
+            if (categoriesWithAccounts == null || categoriesWithAccounts.Count == 0)
             {
                 Label noCategoriesLabel = new Label
                 {
@@ -210,7 +210,7 @@ public partial class MainForm : Form
                 return;
             }
 
-            foreach (var category in categories)
+            foreach (var category in categoriesWithAccounts)
             {
                 var categoryButton = new Button
                 {

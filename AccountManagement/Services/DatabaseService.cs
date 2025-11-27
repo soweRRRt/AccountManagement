@@ -26,8 +26,6 @@ public class DatabaseService
         _connectionString = $"Filename={_dbPath};Password=SecureDBPassword123";
     }
 
-    // === РАБОТА С АККАУНТАМИ ===
-
     public List<Account> GetAllAccounts()
     {
         try
@@ -174,7 +172,6 @@ public class DatabaseService
         {
             using (var db = new LiteDatabase(_connectionString))
             {
-                // Сначала пробуем получить из коллекции categories
                 var categoriesCollection = db.GetCollection<Category>("categories");
                 var categoriesFromDb = categoriesCollection.FindAll()
                     .Select(c => c.Name)
@@ -183,7 +180,6 @@ public class DatabaseService
                     .OrderBy(n => n)
                     .ToList();
 
-                // Также получаем категории из аккаунтов
                 var accounts = db.GetCollection<Account>("accounts");
                 var categoriesFromAccounts = accounts.FindAll()
                     .Select(a => a.Category)
@@ -191,7 +187,6 @@ public class DatabaseService
                     .Distinct()
                     .ToList();
 
-                // Объединяем оба списка
                 var allCategories = categoriesFromDb
                     .Union(categoriesFromAccounts)
                     .Distinct()
@@ -204,6 +199,31 @@ public class DatabaseService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"GetAllCategories Error: {ex.Message}");
+            return new List<string>();
+        }
+    }
+
+    public List<string> GetCategoriesWithAccounts()
+    {
+        try
+        {
+            using (var db = new LiteDatabase(_connectionString))
+            {
+                var accounts = db.GetCollection<Account>("accounts");
+
+                var categoriesWithAccounts = accounts.FindAll()
+                    .Select(a => a.Category)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToList();
+
+                return categoriesWithAccounts;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"GetCategoriesWithAccounts Error: {ex.Message}");
             return new List<string>();
         }
     }
@@ -229,8 +249,6 @@ public class DatabaseService
     {
         return _dbPath;
     }
-
-    // === РАБОТА С КАТЕГОРИЯМИ ===
 
     public List<Category> GetAllCategoriesWithIcons()
     {

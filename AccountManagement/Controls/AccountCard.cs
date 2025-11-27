@@ -30,8 +30,8 @@ public class AccountCard : UserControl
 
     private void InitializeComponents()
     {
-        this.Size = new Size(300, 90);
-        this.Margin = new Padding(10);
+        this.Size = new Size(320, 95);
+        this.Margin = new Padding(8);
         this.Cursor = Cursors.Hand;
 
         mainPanel = new Panel
@@ -48,7 +48,7 @@ public class AccountCard : UserControl
         iconPictureBox = new PictureBox
         {
             Size = new Size(50, 50),
-            Location = new Point(15, 20),
+            Location = new Point(15, 22),
             SizeMode = PictureBoxSizeMode.Zoom,
             BackColor = Color.Transparent
         };
@@ -56,8 +56,8 @@ public class AccountCard : UserControl
 
         titleLabel = new Label
         {
-            Location = new Point(80, 15),
-            Size = new Size(180, 25),
+            Location = new Point(75, 18),
+            Size = new Size(200, 25),
             Font = new Font("Segoe UI", 11, FontStyle.Bold),
             ForeColor = Color.FromArgb(33, 33, 33),
             AutoEllipsis = true
@@ -66,8 +66,8 @@ public class AccountCard : UserControl
 
         usernameLabel = new Label
         {
-            Location = new Point(80, 40),
-            Size = new Size(180, 20),
+            Location = new Point(75, 43),
+            Size = new Size(200, 20),
             Font = new Font("Segoe UI", 9),
             ForeColor = Color.FromArgb(120, 120, 120),
             AutoEllipsis = true
@@ -76,7 +76,7 @@ public class AccountCard : UserControl
 
         categoryLabel = new Label
         {
-            Location = new Point(80, 60),
+            Location = new Point(75, 65),
             AutoSize = true,
             MaximumSize = new Size(180, 20),
             Font = new Font("Segoe UI", 8),
@@ -90,7 +90,7 @@ public class AccountCard : UserControl
         favoriteIcon = new PictureBox
         {
             Size = new Size(24, 24),
-            Location = new Point(260, 15),
+            Location = new Point(280, 18),
             SizeMode = PictureBoxSizeMode.Zoom,
             Cursor = Cursors.Hand,
             BackColor = Color.Transparent
@@ -124,7 +124,6 @@ public class AccountCard : UserControl
             categoryLabel.Visible = false;
         }
 
-        // Icon
         if (!string.IsNullOrWhiteSpace(Account.IconPath) && System.IO.File.Exists(Account.IconPath))
         {
             try
@@ -205,21 +204,18 @@ public class AccountCard : UserControl
         var rect = new Rectangle(0, 0, mainPanel.Width - 1, mainPanel.Height - 1);
         var radius = 12;
 
-        // Тень
         using (var shadowPath = GetRoundedRect(new Rectangle(3, 3, rect.Width - 3, rect.Height - 3), radius))
         using (var shadowBrush = new SolidBrush(Color.FromArgb(20, 0, 0, 0)))
         {
             e.Graphics.FillPath(shadowBrush, shadowPath);
         }
 
-        // Фон
         using (var path = GetRoundedRect(rect, radius))
         using (var brush = new SolidBrush(mainPanel.BackColor))
         {
             e.Graphics.FillPath(brush, path);
         }
 
-        // Граница
         using (var path = GetRoundedRect(rect, radius))
         using (var pen = new Pen(Color.FromArgb(230, 230, 230), 1))
         {

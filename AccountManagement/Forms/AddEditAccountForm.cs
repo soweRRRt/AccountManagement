@@ -65,7 +65,6 @@ public partial class AddEditAccountForm : Form
         int leftMargin = 30;
         int controlWidth = 440;
 
-        // Заголовок формы
         Label formTitle = new Label
         {
             Text = _isEditMode ? "Редактирование аккаунта" : "Новый аккаунт",
@@ -155,9 +154,8 @@ public partial class AddEditAccountForm : Form
             Location = new Point(leftMargin, yPos),
             Size = new Size(controlWidth, 32),
             Font = new Font("Segoe UI", 10),
-            DropDownStyle = ComboBoxStyle.DropDown
+            DropDownStyle = ComboBoxStyle.DropDownList
         };
-        categoryComboBox.MaxLength = 50;
 
         this.Load += (s, e) => LoadCategoriesIntoComboBox();
 
@@ -276,7 +274,6 @@ public partial class AddEditAccountForm : Form
             saveButton, cancelButton
         });
 
-        // Set Tab Order
         titleTextBox.TabIndex = 0;
         usernameTextBox.TabIndex = 1;
         passwordTextBox.TabIndex = 2;
@@ -294,9 +291,9 @@ public partial class AddEditAccountForm : Form
         try
         {
             categoryComboBox.Items.Clear();
-            var categories = _dbService.GetAllCategories();
+            categoryComboBox.Items.Add("");
 
-            System.Diagnostics.Debug.WriteLine($"LoadCategoriesIntoComboBox: {categories?.Count ?? 0} categories");
+            var categories = _dbService.GetAllCategories();
 
             if (categories != null && categories.Count > 0)
             {
@@ -306,15 +303,25 @@ public partial class AddEditAccountForm : Form
                 }
             }
 
-            // Если режим редактирования и категория задана, устанавливаем её
             if (_isEditMode && !string.IsNullOrWhiteSpace(_account?.Category))
             {
-                categoryComboBox.Text = _account.Category;
+                int index = categoryComboBox.Items.IndexOf(_account.Category);
+                if (index >= 0)
+                {
+                    categoryComboBox.SelectedIndex = index;
+                }
+                else
+                {
+                    categoryComboBox.SelectedIndex = 0;
+                }
+            }
+            else
+            {
+                categoryComboBox.SelectedIndex = 0;
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"LoadCategoriesIntoComboBox Error: {ex.Message}");
             MessageBox.Show($"Ошибка загрузки категорий: {ex.Message}", "Ошибка",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
@@ -364,7 +371,6 @@ public partial class AddEditAccountForm : Form
 
         emailTextBox.Text = _account.Email ?? "";
         websiteTextBox.Text = _account.Website ?? "";
-        categoryComboBox.Text = _account.Category ?? "";
         notesTextBox.Text = _account.Notes ?? "";
         favoriteCheckBox.Checked = _account.IsFavorite;
 
@@ -533,7 +539,6 @@ public partial class AddEditAccountForm : Form
 
     private void SaveButton_Click(object sender, EventArgs e)
     {
-        // Валидация
         if (string.IsNullOrWhiteSpace(titleTextBox.Text))
         {
             MessageBox.Show("Введите название аккаунта", "Ошибка валидации",
@@ -566,7 +571,6 @@ public partial class AddEditAccountForm : Form
             return;
         }
 
-        // Email validation (optional)
         if (!string.IsNullOrWhiteSpace(emailTextBox.Text))
         {
             if (!System.Text.RegularExpressions.Regex.IsMatch(emailTextBox.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
@@ -588,6 +592,8 @@ public partial class AddEditAccountForm : Form
 
         try
         {
+            string selectedCategory = categoryComboBox.SelectedItem?.ToString()?.Trim() ?? "";
+
             if (_isEditMode)
             {
                 _account.Title = titleTextBox.Text.Trim();
@@ -595,7 +601,7 @@ public partial class AddEditAccountForm : Form
                 _account.PasswordHash = EncryptionService.Encrypt(passwordTextBox.Text);
                 _account.Email = emailTextBox.Text.Trim();
                 _account.Website = websiteTextBox.Text.Trim();
-                _account.Category = categoryComboBox.Text.Trim();
+                _account.Category = selectedCategory;
                 _account.Notes = notesTextBox.Text.Trim();
                 _account.IsFavorite = favoriteCheckBox.Checked;
                 _account.IconPath = _selectedIconPath;
@@ -613,7 +619,7 @@ public partial class AddEditAccountForm : Form
                     PasswordHash = EncryptionService.Encrypt(passwordTextBox.Text),
                     Email = emailTextBox.Text.Trim(),
                     Website = websiteTextBox.Text.Trim(),
-                    Category = categoryComboBox.Text.Trim(),
+                    Category = selectedCategory,
                     Notes = notesTextBox.Text.Trim(),
                     IsFavorite = favoriteCheckBox.Checked,
                     IconPath = _selectedIconPath

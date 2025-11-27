@@ -20,6 +20,7 @@ public class AccountDetailsControl : UserControl
     private Label usernameLabel;
     private TextBox usernameTextBox;
     private Button copyUsernameButton;
+    private Button showUsernameButton;
 
     private Label passwordLabel;
     private TextBox passwordTextBox;
@@ -55,14 +56,17 @@ public class AccountDetailsControl : UserControl
     private void InitializeComponents()
     {
         this.BackColor = Color.White;
-        this.AutoScroll = true;
+        this.AutoScroll = false;
+        this.Padding = new Padding(10);
 
-        int yPos = 20;
+        int yPos = 15;
+        int leftMargin = 15;
+        int controlWidth = 580;
 
         titleLabel = new Label
         {
-            Location = new Point(20, yPos),
-            Size = new Size(500, 30),
+            Location = new Point(leftMargin, yPos),
+            Size = new Size(controlWidth - 50, 30),
             Font = new Font("Segoe UI", 14, FontStyle.Bold),
             ForeColor = Color.FromArgb(33, 33, 33),
             AutoEllipsis = true
@@ -71,7 +75,7 @@ public class AccountDetailsControl : UserControl
         closeButton = new Button
         {
             Text = "✕",
-            Location = new Point(540, yPos),
+            Location = new Point(controlWidth - 25, yPos),
             Size = new Size(30, 30),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.Transparent,
@@ -81,63 +85,62 @@ public class AccountDetailsControl : UserControl
         closeButton.FlatAppearance.BorderSize = 0;
         closeButton.Click += (s, e) => OnClose?.Invoke();
 
-        yPos += 50;
+        yPos += 45;
 
-        editButton = CreateActionButton("✏️ Редактировать", 20, yPos);
+        editButton = CreateActionButton("✏️ Редактировать", leftMargin, yPos, (controlWidth - 20) / 2);
         editButton.Click += EditButton_Click;
 
-        deleteButton = CreateActionButton("🗑️ Удалить", 300, yPos);
+        deleteButton = CreateActionButton("🗑️ Удалить", leftMargin + (controlWidth - 20) / 2 + 10, yPos, (controlWidth - 20) / 2);
         deleteButton.BackColor = Color.FromArgb(255, 100, 100);
         deleteButton.Click += DeleteButton_Click;
 
-        yPos += 60;
+        yPos += 55;
 
         usernameLabel = CreateLabel("Логин", yPos);
-        yPos += 25;
+        yPos += 22;
 
-        usernameTextBox = CreateTextBox(yPos);
+        usernameTextBox = CreateTextBox(yPos, controlWidth - 80);
         usernameTextBox.UseSystemPasswordChar = true;
         usernameTextBox.ReadOnly = true;
 
-        copyUsernameButton = CreateIconButton("📋", 490, yPos);
+        copyUsernameButton = CreateIconButton("📋", controlWidth - 70, yPos);
         copyUsernameButton.Click += (s, e) => CopyToClipboard(usernameTextBox.Text, "Логин");
 
-        var showUsernameButton = CreateIconButton("👁", 525, yPos);
+        showUsernameButton = CreateIconButton("👁", controlWidth - 35, yPos);
         showUsernameButton.Click += (s, e) => ToggleVisibility(usernameTextBox);
 
-        yPos += 50;
+        yPos += 42;
 
         passwordLabel = CreateLabel("Пароль", yPos);
-        yPos += 25;
+        yPos += 22;
 
-        passwordTextBox = CreateTextBox(yPos);
+        passwordTextBox = CreateTextBox(yPos, controlWidth - 80);
         passwordTextBox.UseSystemPasswordChar = true;
         passwordTextBox.ReadOnly = true;
 
-        copyPasswordButton = CreateIconButton("📋", 490, yPos);
+        copyPasswordButton = CreateIconButton("📋", controlWidth - 70, yPos);
         copyPasswordButton.Click += (s, e) => CopyToClipboard(passwordTextBox.Text, "Пароль");
 
-        showPasswordButton = CreateIconButton("👁", 525, yPos);
+        showPasswordButton = CreateIconButton("👁", controlWidth - 35, yPos);
         showPasswordButton.Click += ShowPasswordButton_Click;
 
-        yPos += 50;
+        yPos += 42;
 
         emailLabel = CreateLabel("Email", yPos);
-        yPos += 25;
+        yPos += 22;
 
-        emailTextBox = CreateTextBox(yPos);
+        emailTextBox = CreateTextBox(yPos, controlWidth);
         emailTextBox.ReadOnly = true;
-        emailTextBox.Width = 540;
 
-        yPos += 50;
+        yPos += 42;
 
         websiteLabel = CreateLabel("Веб-сайт", yPos);
-        yPos += 25;
+        yPos += 22;
 
         websiteLinkLabel = new LinkLabel
         {
-            Location = new Point(20, yPos),
-            Size = new Size(540, 30),
+            Location = new Point(leftMargin, yPos),
+            Size = new Size(controlWidth, 25),
             Font = new Font("Segoe UI", 10),
             LinkColor = Color.FromArgb(100, 100, 255),
             AutoEllipsis = true
@@ -169,24 +172,23 @@ public class AccountDetailsControl : UserControl
             }
         };
 
-        yPos += 50;
+        yPos += 38;
 
         categoryLabel = CreateLabel("Категория", yPos);
-        yPos += 25;
+        yPos += 22;
 
-        categoryTextBox = CreateTextBox(yPos);
+        categoryTextBox = CreateTextBox(yPos, controlWidth);
         categoryTextBox.ReadOnly = true;
-        categoryTextBox.Width = 540;
 
-        yPos += 50;
+        yPos += 42;
 
         notesLabel = CreateLabel("Заметки", yPos);
-        yPos += 25;
+        yPos += 22;
 
         notesTextBox = new TextBox
         {
-            Location = new Point(20, yPos),
-            Size = new Size(540, 100),
+            Location = new Point(leftMargin, yPos),
+            Size = new Size(controlWidth, 80),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
             Font = new Font("Segoe UI", 10),
@@ -195,12 +197,12 @@ public class AccountDetailsControl : UserControl
             BorderStyle = BorderStyle.FixedSingle
         };
 
-        yPos += 120;
+        yPos += 95;
 
         datesLabel = new Label
         {
-            Location = new Point(20, yPos),
-            Size = new Size(540, 60),
+            Location = new Point(leftMargin, yPos),
+            Size = new Size(controlWidth, 50),
             Font = new Font("Segoe UI", 8),
             ForeColor = Color.FromArgb(150, 150, 150)
         };
@@ -223,19 +225,19 @@ public class AccountDetailsControl : UserControl
         return new Label
         {
             Text = text,
-            Location = new Point(20, yPos),
+            Location = new Point(15, yPos),
             AutoSize = true,
             Font = new Font("Segoe UI", 9, FontStyle.Bold),
             ForeColor = Color.FromArgb(100, 100, 100)
         };
     }
 
-    private TextBox CreateTextBox(int yPos)
+    private TextBox CreateTextBox(int yPos, int width)
     {
         return new TextBox
         {
-            Location = new Point(20, yPos),
-            Size = new Size(460, 30),
+            Location = new Point(15, yPos),
+            Size = new Size(width, 28),
             Font = new Font("Segoe UI", 10),
             BackColor = Color.FromArgb(250, 250, 250),
             BorderStyle = BorderStyle.FixedSingle
@@ -248,7 +250,7 @@ public class AccountDetailsControl : UserControl
         {
             Text = icon,
             Location = new Point(xPos, yPos),
-            Size = new Size(30, 30),
+            Size = new Size(30, 28),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(240, 240, 245),
             Font = new Font("Segoe UI", 10),
@@ -258,13 +260,13 @@ public class AccountDetailsControl : UserControl
         return button;
     }
 
-    private Button CreateActionButton(string text, int xPos, int yPos)
+    private Button CreateActionButton(string text, int xPos, int yPos, int width)
     {
         var button = new Button
         {
             Text = text,
             Location = new Point(xPos, yPos),
-            Size = new Size(260, 40),
+            Size = new Size(width, 38),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
