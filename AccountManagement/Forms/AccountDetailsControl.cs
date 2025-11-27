@@ -306,8 +306,6 @@ public class AccountDetailsControl : UserControl
         if (!string.IsNullOrEmpty(text))
         {
             Clipboard.SetText(text);
-            MessageBox.Show($"{fieldName} скопирован в буфер обмена", "Успех",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 
