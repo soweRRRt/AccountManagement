@@ -101,15 +101,7 @@ public partial class MainForm : Form
         favoritesButton.Click += (s, e) => FilterAccounts("Favorites");
 
         manageCategoriesButton = CreateSidebarButton("⚙️ Управление", 115);
-        manageCategoriesButton.Click += (s, e) =>
-        {
-            var form = new CategoriesListForm();
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                LoadCategories();
-                LoadAccounts();
-            }
-        };
+        manageCategoriesButton.Click += ManageCategoriesButton_Click;
 
         categoriesLabel = new Label
         {
@@ -147,10 +139,11 @@ public partial class MainForm : Form
             BackColor = Color.FromArgb(245, 245, 250)
         };
 
+        // УВЕЛИЧЕНА ШИРИНА С 500 до 600
         detailsPanel = new Panel
         {
             Dock = DockStyle.Right,
-            Width = 500,
+            Width = 600,
             BackColor = Color.White,
             Visible = false,
             Padding = new Padding(20)
@@ -182,7 +175,19 @@ public partial class MainForm : Form
         return button;
     }
 
-    private void LoadCategories()
+    private void ManageCategoriesButton_Click(object sender, EventArgs e)
+    {
+        var form = new CategoriesListForm();
+        form.FormClosed += (s, args) =>
+        {
+            // Обновляем категории после закрытия формы управления
+            LoadCategories();
+            LoadAccounts();
+        };
+        form.Show();
+    }
+
+    public void LoadCategories()
     {
         try
         {
@@ -223,7 +228,7 @@ public partial class MainForm : Form
                 categoryButton.FlatAppearance.BorderSize = 0;
                 categoryButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(240, 240, 250);
 
-                string cat = category; // Capture variable
+                string cat = category;
                 categoryButton.Click += (s, e) => FilterAccounts("Category", cat);
 
                 categoryPanel.Controls.Add(categoryButton);

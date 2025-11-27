@@ -62,15 +62,16 @@ public class AccountDetailsControl : UserControl
         titleLabel = new Label
         {
             Location = new Point(20, yPos),
-            Size = new Size(380, 30),
+            Size = new Size(500, 30),
             Font = new Font("Segoe UI", 14, FontStyle.Bold),
-            ForeColor = Color.FromArgb(33, 33, 33)
+            ForeColor = Color.FromArgb(33, 33, 33),
+            AutoEllipsis = true
         };
 
         closeButton = new Button
         {
             Text = "✕",
-            Location = new Point(440, yPos),
+            Location = new Point(540, yPos),
             Size = new Size(30, 30),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.Transparent,
@@ -85,7 +86,7 @@ public class AccountDetailsControl : UserControl
         editButton = CreateActionButton("✏️ Редактировать", 20, yPos);
         editButton.Click += EditButton_Click;
 
-        deleteButton = CreateActionButton("🗑️ Удалить", 250, yPos);
+        deleteButton = CreateActionButton("🗑️ Удалить", 300, yPos);
         deleteButton.BackColor = Color.FromArgb(255, 100, 100);
         deleteButton.Click += DeleteButton_Click;
 
@@ -98,10 +99,10 @@ public class AccountDetailsControl : UserControl
         usernameTextBox.UseSystemPasswordChar = true;
         usernameTextBox.ReadOnly = true;
 
-        copyUsernameButton = CreateIconButton("📋", 400, yPos);
+        copyUsernameButton = CreateIconButton("📋", 490, yPos);
         copyUsernameButton.Click += (s, e) => CopyToClipboard(usernameTextBox.Text, "Логин");
 
-        var showUsernameButton = CreateIconButton("👁", 435, yPos);
+        var showUsernameButton = CreateIconButton("👁", 525, yPos);
         showUsernameButton.Click += (s, e) => ToggleVisibility(usernameTextBox);
 
         yPos += 50;
@@ -113,10 +114,10 @@ public class AccountDetailsControl : UserControl
         passwordTextBox.UseSystemPasswordChar = true;
         passwordTextBox.ReadOnly = true;
 
-        copyPasswordButton = CreateIconButton("📋", 400, yPos);
+        copyPasswordButton = CreateIconButton("📋", 490, yPos);
         copyPasswordButton.Click += (s, e) => CopyToClipboard(passwordTextBox.Text, "Пароль");
 
-        showPasswordButton = CreateIconButton("👁", 435, yPos);
+        showPasswordButton = CreateIconButton("👁", 525, yPos);
         showPasswordButton.Click += ShowPasswordButton_Click;
 
         yPos += 50;
@@ -126,7 +127,7 @@ public class AccountDetailsControl : UserControl
 
         emailTextBox = CreateTextBox(yPos);
         emailTextBox.ReadOnly = true;
-        emailTextBox.Width = 440;
+        emailTextBox.Width = 540;
 
         yPos += 50;
 
@@ -136,9 +137,10 @@ public class AccountDetailsControl : UserControl
         websiteLinkLabel = new LinkLabel
         {
             Location = new Point(20, yPos),
-            Size = new Size(440, 30),
+            Size = new Size(540, 30),
             Font = new Font("Segoe UI", 10),
-            LinkColor = Color.FromArgb(100, 100, 255)
+            LinkColor = Color.FromArgb(100, 100, 255),
+            AutoEllipsis = true
         };
         websiteLinkLabel.LinkClicked += (s, e) =>
         {
@@ -174,7 +176,7 @@ public class AccountDetailsControl : UserControl
 
         categoryTextBox = CreateTextBox(yPos);
         categoryTextBox.ReadOnly = true;
-        categoryTextBox.Width = 440;
+        categoryTextBox.Width = 540;
 
         yPos += 50;
 
@@ -184,7 +186,7 @@ public class AccountDetailsControl : UserControl
         notesTextBox = new TextBox
         {
             Location = new Point(20, yPos),
-            Size = new Size(440, 100),
+            Size = new Size(540, 100),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
             Font = new Font("Segoe UI", 10),
@@ -198,7 +200,7 @@ public class AccountDetailsControl : UserControl
         datesLabel = new Label
         {
             Location = new Point(20, yPos),
-            Size = new Size(440, 60),
+            Size = new Size(540, 60),
             Font = new Font("Segoe UI", 8),
             ForeColor = Color.FromArgb(150, 150, 150)
         };
@@ -233,7 +235,7 @@ public class AccountDetailsControl : UserControl
         return new TextBox
         {
             Location = new Point(20, yPos),
-            Size = new Size(370, 30),
+            Size = new Size(460, 30),
             Font = new Font("Segoe UI", 10),
             BackColor = Color.FromArgb(250, 250, 250),
             BorderStyle = BorderStyle.FixedSingle
@@ -262,7 +264,7 @@ public class AccountDetailsControl : UserControl
         {
             Text = text,
             Location = new Point(xPos, yPos),
-            Size = new Size(210, 40),
+            Size = new Size(260, 40),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,

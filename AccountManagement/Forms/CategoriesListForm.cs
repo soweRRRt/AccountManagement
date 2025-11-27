@@ -2,6 +2,7 @@
 using AccountManagement.Services;
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Windows.Forms;
 
@@ -12,10 +13,22 @@ public class CategoriesListForm : Form
     private DatabaseService _dbService;
     private FlowLayoutPanel categoriesPanel;
     private Button addButton;
+    private MainForm _mainForm;
 
     public CategoriesListForm()
     {
         _dbService = new DatabaseService();
+
+        // Находим главную форму
+        foreach (Form form in Application.OpenForms)
+        {
+            if (form is MainForm mainForm)
+            {
+                _mainForm = mainForm;
+                break;
+            }
+        }
+
         InitializeComponent();
         LoadCategories();
     }
@@ -23,17 +36,17 @@ public class CategoriesListForm : Form
     private void InitializeComponent()
     {
         this.Text = "Управление категориями";
-        this.Size = new Size(600, 500);
+        this.Size = new Size(700, 550);
         this.StartPosition = FormStartPosition.CenterParent;
         this.BackColor = Color.FromArgb(245, 245, 250);
         this.Font = new Font("Segoe UI", 9);
 
         Label titleLabel = new Label
         {
-            Text = "📁 Категории",
-            Font = new Font("Segoe UI", 16, FontStyle.Bold),
+            Text = "📁 Управление категориями",
+            Font = new Font("Segoe UI", 18, FontStyle.Bold),
             ForeColor = Color.FromArgb(33, 33, 33),
-            Location = new Point(20, 20),
+            Location = new Point(25, 20),
             AutoSize = true
         };
         this.Controls.Add(titleLabel);
@@ -41,12 +54,12 @@ public class CategoriesListForm : Form
         addButton = new Button
         {
             Text = "+ Добавить категорию",
-            Location = new Point(400, 15),
-            Size = new Size(170, 40),
+            Location = new Point(480, 15),
+            Size = new Size(190, 45),
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            Font = new Font("Segoe UI", 11, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
         addButton.FlatAppearance.BorderSize = 0;
@@ -55,11 +68,12 @@ public class CategoriesListForm : Form
 
         categoriesPanel = new FlowLayoutPanel
         {
-            Location = new Point(20, 70),
-            Size = new Size(550, 380),
+            Location = new Point(25, 80),
+            Size = new Size(640, 430),
             AutoScroll = true,
             BackColor = Color.White,
-            Padding = new Padding(10)
+            Padding = new Padding(15),
+            BorderStyle = BorderStyle.FixedSingle
         };
         this.Controls.Add(categoriesPanel);
     }
@@ -73,11 +87,11 @@ public class CategoriesListForm : Form
         {
             Label noDataLabel = new Label
             {
-                Text = "Нет категорий. Добавьте первую!",
-                Font = new Font("Segoe UI", 11),
+                Text = "Нет категорий. Добавьте первую категорию!",
+                Font = new Font("Segoe UI", 12),
                 ForeColor = Color.FromArgb(150, 150, 150),
                 AutoSize = true,
-                Margin = new Padding(10)
+                Margin = new Padding(20)
             };
             categoriesPanel.Controls.Add(noDataLabel);
             return;
@@ -94,30 +108,49 @@ public class CategoriesListForm : Form
     {
         Panel card = new Panel
         {
-            Size = new Size(510, 70),
+            Size = new Size(590, 80),
             BackColor = Color.White,
             BorderStyle = BorderStyle.FixedSingle,
-            Margin = new Padding(5)
+            Margin = new Padding(5),
+            Cursor = Cursors.Hand
+        };
+
+        card.Paint += (s, e) =>
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var pen = new Pen(Color.FromArgb(230, 230, 230), 2))
+            {
+                e.Graphics.DrawRectangle(pen, 0, 0, card.Width - 1, card.Height - 1);
+            }
         };
 
         PictureBox iconBox = new PictureBox
         {
-            Location = new Point(10, 10),
+            Location = new Point(15, 15),
             Size = new Size(50, 50),
             SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.FromArgb(240, 240, 245)
+            BackColor = Color.Transparent
         };
 
-        if (!string.IsNullOrEmpty(category.IconPath) && File.Exists(category.IconPath))
+        bool hasCustomIcon = !string.IsNullOrEmpty(category.IconPath) && File.Exists(category.IconPath);
+
+        if (hasCustomIcon)
         {
-            iconBox.Image = Image.FromFile(category.IconPath);
+            try
+            {
+                iconBox.Image = Image.FromFile(category.IconPath);
+            }
+            catch
+            {
+                hasCustomIcon = false;
+            }
         }
-        else
+
+        if (!hasCustomIcon)
         {
-            // Первая буква на синем кружке
             iconBox.Paint += (s, e) =>
             {
-                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 using (var brush = new SolidBrush(Color.FromArgb(100, 100, 255)))
                 {
                     e.Graphics.FillEllipse(brush, 0, 0, 50, 50);
@@ -142,32 +175,33 @@ public class CategoriesListForm : Form
         Label nameLabel = new Label
         {
             Text = category.Name,
-            Location = new Point(70, 15),
-            Size = new Size(250, 25),
-            Font = new Font("Segoe UI", 11, FontStyle.Bold),
-            ForeColor = Color.FromArgb(33, 33, 33)
+            Location = new Point(80, 18),
+            Size = new Size(320, 28),
+            Font = new Font("Segoe UI", 13, FontStyle.Bold),
+            ForeColor = Color.FromArgb(33, 33, 33),
+            AutoEllipsis = true
         };
         card.Controls.Add(nameLabel);
 
         Label dateLabel = new Label
         {
-            Text = $"Создано: {category.CreatedAt:dd.MM.yyyy}",
-            Location = new Point(70, 40),
+            Text = $"Создано: {category.CreatedAt:dd MMMM yyyy, HH:mm}",
+            Location = new Point(80, 46),
             AutoSize = true,
-            Font = new Font("Segoe UI", 8),
+            Font = new Font("Segoe UI", 9),
             ForeColor = Color.FromArgb(120, 120, 120)
         };
         card.Controls.Add(dateLabel);
 
         Button editButton = new Button
         {
-            Text = "✏️",
-            Location = new Point(400, 15),
-            Size = new Size(40, 40),
+            Text = "✏️ Изменить",
+            Location = new Point(420, 20),
+            Size = new Size(70, 40),
             BackColor = Color.FromArgb(100, 100, 255),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 12),
+            Font = new Font("Segoe UI", 9, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
         editButton.FlatAppearance.BorderSize = 0;
@@ -177,12 +211,12 @@ public class CategoriesListForm : Form
         Button deleteButton = new Button
         {
             Text = "🗑️",
-            Location = new Point(450, 15),
-            Size = new Size(40, 40),
+            Location = new Point(500, 20),
+            Size = new Size(70, 40),
             BackColor = Color.FromArgb(255, 100, 100),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 12),
+            Font = new Font("Segoe UI", 14),
             Cursor = Cursors.Hand
         };
         deleteButton.FlatAppearance.BorderSize = 0;
@@ -198,6 +232,7 @@ public class CategoriesListForm : Form
         if (form.ShowDialog() == DialogResult.OK)
         {
             LoadCategories();
+            _mainForm?.LoadCategories();
         }
     }
 
@@ -207,6 +242,7 @@ public class CategoriesListForm : Form
         if (form.ShowDialog() == DialogResult.OK)
         {
             LoadCategories();
+            _mainForm?.LoadCategories();
         }
     }
 
@@ -214,7 +250,7 @@ public class CategoriesListForm : Form
     {
         var result = MessageBox.Show(
             $"Вы уверены, что хотите удалить категорию '{category.Name}'?\n\n" +
-            "Категория будет удалена у всех аккаунтов.",
+            "Категория будет удалена у всех аккаунтов с этой категорией.",
             "Подтверждение удаления",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Warning
@@ -225,7 +261,10 @@ public class CategoriesListForm : Form
             try
             {
                 _dbService.DeleteCategory(category.Id);
+                MessageBox.Show("Категория успешно удалена!", "Успех",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadCategories();
+                _mainForm?.LoadCategories();
             }
             catch (Exception ex)
             {
